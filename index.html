@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="data:," />
     <title>Keuangan Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -13,24 +13,27 @@
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
       :root{
-        --bg:#f4f8f6; --surface:#ffffff; --surface2:#eef4f1; --ink:#10231d; --muted:#5c7269;
+        color-scheme:light;
+        --bg:#ffffff; --surface:#ffffff; --surface2:#eef4f1; --ink:#10231d; --muted:#5c7269;
         --line:#e2ece7; --green:#0da678; --green-deep:#0b7a5c; --green-soft:#e3f5ee;
         --red:#e14b4b; --red-soft:#fdecec; --amber:#e8930c; --amber-soft:#fdf3e0;
         --teal:#0e7c86; --shadow:0 10px 30px rgba(11,60,45,.10); --shadow-sm:0 3px 10px rgba(11,60,45,.07);
         --radius:20px;
       }
-      @media (prefers-color-scheme: dark){
-        :root{
-          --bg:#0b1411; --surface:#13201b; --surface2:#1a2a24; --ink:#e8f2ee; --muted:#93aca2;
-          --line:#22362e; --green:#2bc493; --green-deep:#0da678; --green-soft:#173a2f;
-          --red:#f07676; --red-soft:#3d2226; --amber:#f0a832; --amber-soft:#3a2f1a;
-          --shadow:0 10px 30px rgba(0,0,0,.45); --shadow-sm:0 3px 10px rgba(0,0,0,.35);
-        }
-      }
       *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
       html{scroll-behavior:smooth;}
-      body{margin:0; font-family:"Plus Jakarta Sans",system-ui,sans-serif; background:var(--bg); color:var(--ink); padding-bottom:96px;}
-      .wrap{max-width:560px; margin:0 auto; padding:0 16px;}
+      body{margin:0; font-family:"Plus Jakarta Sans",system-ui,sans-serif; background:#fff; color:var(--ink); padding-bottom:96px;}
+      body::before{content:""; position:fixed; inset:-40px; z-index:0; pointer-events:none;
+        background:
+          radial-gradient(430px 300px at 108% -30px, rgba(14,124,134,.16), transparent 70%),
+          radial-gradient(470px 330px at -130px 32%, rgba(13,166,120,.13), transparent 70%),
+          radial-gradient(400px 300px at 92% 88%, rgba(232,147,12,.10), transparent 70%),
+          radial-gradient(340px 260px at 12% 96%, rgba(43,108,176,.08), transparent 70%);
+        animation:glowShift 16s ease-in-out infinite alternate;}
+      @keyframes glowShift{from{transform:scale(1) translate(0,0)}to{transform:scale(1.1) translate(-12px,10px)}}
+      button{transition:transform .16s ease, box-shadow .22s ease, background-color .2s ease, border-color .2s ease, color .2s ease;}
+      button:active{transform:scale(.94);}
+      .wrap{max-width:560px; margin:0 auto; padding:0 16px; position:relative; z-index:1;}
       @media(min-width:900px){ .wrap{max-width:880px;} }
 
       /* ---------- header ---------- */
@@ -47,8 +50,15 @@
 
       /* ---------- hero saldo ---------- */
       .hero{margin-top:16px; border-radius:26px; padding:22px; color:#fff; position:relative; overflow:hidden;
-        background:linear-gradient(130deg,#0b7a5c 0%,#0da678 55%,#12b981 100%); box-shadow:0 16px 34px rgba(11,122,92,.35);
-        animation:rise .55s cubic-bezier(.2,.9,.3,1) both;}
+        background:linear-gradient(130deg,#0b7a5c 0%,#0da678 38%,#12b981 68%,#0e7c86 100%); background-size:230% 230%;
+        box-shadow:0 16px 34px rgba(11,122,92,.35);
+        animation:rise .55s cubic-bezier(.2,.9,.3,1) both, heroShift 9s ease-in-out infinite alternate;}
+      @keyframes heroShift{from{background-position:0% 35%}to{background-position:100% 65%}}
+      .hero .sheen{position:absolute; top:-10%; bottom:-10%; width:42%; left:-60%; z-index:0;
+        background:linear-gradient(100deg,transparent,rgba(255,255,255,.20),transparent); transform:skewX(-18deg);
+        animation:sheen 4.8s ease-in-out infinite;}
+      @keyframes sheen{0%,52%{left:-60%}88%,100%{left:135%}}
+      .hero .lbl,.hero .total,.hero .sub{position:relative; z-index:1;}
       .hero::after{content:""; position:absolute; right:-50px; top:-60px; width:210px; height:210px; border-radius:50%;
         background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%); animation:drift 7s ease-in-out infinite alternate;}
       .hero::before{content:""; position:absolute; left:-30px; bottom:-80px; width:170px; height:170px; border-radius:50%;
@@ -67,7 +77,8 @@
       /* ---------- sections ---------- */
       section{margin-top:26px;}
       .sec-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;}
-      .sec-head h2{font-size:16.5px; font-weight:800; margin:0; letter-spacing:-.01em;}
+      .sec-head h2{font-size:16.5px; font-weight:800; margin:0; letter-spacing:-.01em; position:relative; padding-left:13px;}
+      .sec-head h2::before{content:""; position:absolute; left:0; top:3px; bottom:3px; width:4.5px; border-radius:99px; background:linear-gradient(180deg,var(--green),var(--teal));}
       .sec-head button{border:0; background:none; color:var(--green-deep); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; padding:8px 4px;}
       .rise{animation:rise .55s cubic-bezier(.2,.9,.3,1) both;}
       .d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}.d4{animation-delay:.24s}.d5{animation-delay:.3s}.d6{animation-delay:.36s}
@@ -75,7 +86,9 @@
       /* ---------- akun ---------- */
       .akun-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
       @media(min-width:900px){ .akun-grid{grid-template-columns:repeat(4,1fr);} }
-      .akun{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:15px; box-shadow:var(--shadow-sm); position:relative; overflow:hidden; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;}
+      .akun{background:linear-gradient(155deg, color-mix(in srgb, var(--acc,#0da678) 8%, #fff), #fff 58%); border:1px solid var(--line); border-radius:var(--radius); padding:15px; box-shadow:var(--shadow-sm); position:relative; overflow:hidden; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;}
+      .akun::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg, var(--acc,#0da678), color-mix(in srgb, var(--acc,#0da678) 12%, #fff));}
+      @media(hover:hover){ .akun:hover{transform:translateY(-3px); box-shadow:var(--shadow);} .qa button:hover{transform:translateY(-3px); box-shadow:var(--shadow);} }
       .akun:active{transform:scale(.97);}
       .akun .ic{width:38px;height:38px;border-radius:12px; display:flex;align-items:center;justify-content:center; margin-bottom:10px;}
       .akun .ic svg{width:20px;height:20px;}
@@ -155,21 +168,22 @@
       .badge{font-size:10.5px; font-weight:800; padding:4px 9px; border-radius:99px; letter-spacing:.02em;}
       .badge.wait{background:var(--amber-soft); color:var(--amber);}
       .badge.done{background:var(--green-soft); color:var(--green-deep);}
-      .loan .pay{margin-top:12px; width:100%; border:0; border-radius:13px; padding:12px; font:inherit; font-weight:800; font-size:13.5px; background:var(--green); color:#fff; cursor:pointer; transition:transform .15s;}
+      .loan .pay{margin-top:12px; width:100%; border:0; border-radius:13px; padding:12px; font:inherit; font-weight:800; font-size:13.5px; background:linear-gradient(120deg,var(--green-deep),var(--green) 60%,#12b981); box-shadow:0 8px 18px rgba(13,166,120,.28); color:#fff; cursor:pointer; transition:transform .15s; position:relative; overflow:hidden;}
       .loan .pay:active{transform:scale(.97);}
       .loan.lunas{opacity:.62;}
 
       /* ---------- chips / filter ---------- */
       .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px;}
-      .chip{border:1px solid var(--line); background:var(--surface); color:var(--muted); font:inherit; font-size:12.5px; font-weight:700; padding:9px 15px; border-radius:99px; cursor:pointer; min-height:38px; transition:all .18s;}
-      .chip.on{background:var(--green); border-color:var(--green); color:#fff; box-shadow:0 6px 14px rgba(13,166,120,.3);}
+      .chip{border:1px solid var(--line); background:var(--surface); color:var(--muted); font:inherit; font-size:12.5px; font-weight:700; padding:9px 15px; border-radius:99px; cursor:pointer; min-height:38px; transition:all .18s; position:relative; overflow:hidden;}
+      .chip.on{background:linear-gradient(120deg,var(--green-deep),var(--green) 60%,#12b981); border-color:transparent; color:#fff; box-shadow:0 6px 14px rgba(13,166,120,.3);}
 
       /* ---------- bottom nav ---------- */
       nav.bottom{position:fixed; left:0; right:0; bottom:0; z-index:40; background:color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter:blur(14px); border-top:1px solid var(--line); padding:8px 10px calc(8px + env(safe-area-inset-bottom));}
       nav.bottom .inner{max-width:560px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr);}
       nav.bottom button{border:0; background:none; font:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0 4px; color:var(--muted); font-size:10.5px; font-weight:700; border-radius:14px; min-height:52px; transition:color .2s;}
       nav.bottom button svg{width:22px;height:22px; transition:transform .25s cubic-bezier(.2,1.6,.4,1);}
-      nav.bottom button.on{color:var(--green-deep);}
+      nav.bottom button{position:relative; overflow:hidden;}
+      nav.bottom button.on{color:var(--green-deep); background:linear-gradient(165deg,var(--green-soft),rgba(227,245,238,.2));}
       nav.bottom button.on svg{transform:translateY(-2px) scale(1.12);}
       .view{display:none;}
       .view.on{display:block; animation:viewIn .38s cubic-bezier(.2,.9,.3,1) both;}
@@ -209,6 +223,19 @@
       .empty{padding:26px 10px; text-align:center; color:var(--muted); font-size:13px; font-weight:600;}
       .foot{margin-top:30px; font-size:11.5px; color:var(--muted); line-height:1.65; font-weight:500;}
       .more-btn{width:100%; margin-top:12px; border:1px solid var(--line); background:var(--surface); border-radius:14px; padding:13px; font:inherit; font-weight:800; font-size:13px; cursor:pointer; color:var(--green-deep);}
+      /* ---------- reveal saat scroll & animasi ekstra ---------- */
+      .rv{opacity:.25; transform:translateY(24px); transition:opacity .65s ease, transform .65s cubic-bezier(.2,.9,.3,1);}
+      .rv.in{opacity:1; transform:none;}
+      .qa .ic{transition:transform .25s cubic-bezier(.2,1.6,.4,1);}
+      .qa button:active .ic{transform:scale(1.18) rotate(-5deg);}
+      .dl-row{animation:rise .5s cubic-bezier(.2,.9,.3,1) both;}
+      .dl-row:nth-child(2){animation-delay:.07s}.dl-row:nth-child(3){animation-delay:.14s}.dl-row:nth-child(4){animation-delay:.21s}.dl-row:nth-child(5){animation-delay:.28s}.dl-row:nth-child(6){animation-delay:.35s}
+      #recentList .tx{animation:rise .5s cubic-bezier(.2,.9,.3,1) both;}
+      #recentList .tx:nth-child(2){animation-delay:.06s}#recentList .tx:nth-child(3){animation-delay:.12s}#recentList .tx:nth-child(4){animation-delay:.18s}#recentList .tx:nth-child(5){animation-delay:.24s}#recentList .tx:nth-child(6){animation-delay:.3s}
+      .bar{cursor:pointer;}
+      .opts button,.quick button,.more-btn{position:relative; overflow:hidden;}
+      .avatar{animation:pop .6s cubic-bezier(.2,1.6,.4,1) both, floaty 5.5s ease-in-out .8s infinite;}
+      @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
       @media (prefers-reduced-motion: reduce){
         *,*::before,*::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
       }
@@ -232,6 +259,7 @@
       <!-- ============ BERANDA ============ -->
       <div class="view on" id="view-home">
         <div class="hero">
+          <div class="sheen" aria-hidden="true"></div>
           <div class="lbl">Total saldo semua akun</div>
           <div class="total" id="totalSaldo">Rp0</div>
           <div class="sub" id="heroSub">—</div>
@@ -255,12 +283,12 @@
         <section>
           <div class="sec-head"><h2>Aksi cepat</h2></div>
           <div class="qa" id="qaGrid">
-            <button data-act="masuk"><span class="ic" style="background:var(--green-soft);color:var(--green-deep)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span>Pemasukan</span></button>
-            <button data-act="keluar"><span class="ic" style="background:var(--red-soft);color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg></span><span>Pengeluaran</span></button>
-            <button data-act="pindah"><span class="ic" style="background:#e6f0fd;color:#2b6cb0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></span><span>Pindah Akun</span></button>
-            <button data-act="pinjam"><span class="ic" style="background:var(--amber-soft);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></span><span>Pinjam</span></button>
-            <button data-act="kembali"><span class="ic" style="background:#efe9fd;color:#6b46c1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span><span>Kembalikan</span></button>
-            <button data-act="laporan"><span class="ic" style="background:var(--surface2);color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span>Laporan</span></button>
+            <button data-act="masuk"><span class="ic" style="background:linear-gradient(135deg,#0b7a5c,#12b981);color:#fff;box-shadow:0 6px 14px rgba(13,166,120,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span>Pemasukan</span></button>
+            <button data-act="keluar"><span class="ic" style="background:linear-gradient(135deg,#c93a3a,#f0766c);color:#fff;box-shadow:0 6px 14px rgba(225,75,75,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg></span><span>Pengeluaran</span></button>
+            <button data-act="pindah"><span class="ic" style="background:linear-gradient(135deg,#2b6cb0,#4299e1);color:#fff;box-shadow:0 6px 14px rgba(43,108,176,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></span><span>Pindah Akun</span></button>
+            <button data-act="pinjam"><span class="ic" style="background:linear-gradient(135deg,#c47408,#f5b73e);color:#fff;box-shadow:0 6px 14px rgba(232,147,12,.32)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></span><span>Pinjam</span></button>
+            <button data-act="kembali"><span class="ic" style="background:linear-gradient(135deg,#6b46c1,#9f7aea);color:#fff;box-shadow:0 6px 14px rgba(107,70,193,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span><span>Kembalikan</span></button>
+            <button data-act="laporan"><span class="ic" style="background:linear-gradient(135deg,#0e7c86,#2bb3bd);color:#fff;box-shadow:0 6px 14px rgba(14,124,134,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span>Laporan</span></button>
           </div>
         </section>
 
@@ -418,6 +446,7 @@
 
       function rp(n){ var neg = n<0; n = Math.abs(Math.round(n)); return (neg?"−Rp":"Rp") + n.toLocaleString("id-ID"); }
       function rpShort(n){ if(n>=1000000) return "Rp" + (Math.round(n/100000)/10).toLocaleString("id-ID") + "jt"; if(n>=1000) return "Rp" + Math.round(n/1000) + "rb"; return rp(n); }
+      function shade(hex, amt){ var n = parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255; r=Math.round(r+(255-r)*amt); g=Math.round(g+(255-g)*amt); b=Math.round(b+(255-b)*amt); return "rgb("+r+","+g+","+b+")"; }
       function dstr(ts){ var d=new Date(ts); return d.toLocaleDateString("id-ID",{day:"numeric",month:"short"}) + " · " + d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"}).replace(":","."); }
       function esc(s){ return String(s||"").replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
@@ -451,6 +480,15 @@
     <script>
       /* ================= RENDER ================= */
       var $ = function(id){ return document.getElementById(id); };
+      var lastMonths = [], lastLabels = [];
+      function playCharts(){
+        document.querySelectorAll(".bar").forEach(function(b2){ b2.style.height = "0px"; });
+        document.querySelectorAll("#donutSvg .seg").forEach(function(s2){ s2.setAttribute("stroke-dasharray", "0 " + (s2.getAttribute("data-circ")||0)); });
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){
+          document.querySelectorAll(".bar").forEach(function(b2){ b2.style.height = b2.getAttribute("data-h")+"px"; });
+          document.querySelectorAll("#donutSvg .seg").forEach(function(s2){ s2.setAttribute("stroke-dasharray", s2.getAttribute("data-dash")); });
+        }); });
+      }
 
       function txRow(t){
         var meta = AKUN_META[t.akun];
@@ -480,7 +518,7 @@
         $("akunGrid").innerHTML = Object.keys(AKUN_META).map(function(k, i){
           var m = AKUN_META[k];
           var cnt = txs.filter(function(t){ return txHasAkun(t, k); }).length;
-          return '<div class="akun rise d'+(i+1)+'" data-akun="'+k+'"><div class="ic" style="background:'+m.soft+';color:'+m.color+'">'+m.icon+'</div>' +
+          return '<div class="akun rise d'+(i+1)+'" data-akun="'+k+'" style="--acc:'+m.color+'"><div class="ic" style="background:'+m.soft+';color:'+m.color+'">'+m.icon+'</div>' +
             '<div class="nm">'+m.nama+'</div><div class="bl" data-bal="'+k+'">'+rp(b[k])+'</div><div class="mini">'+cnt+' transaksi</div></div>';
         }).join("");
         document.querySelectorAll(".akun").forEach(function(el){
@@ -507,10 +545,12 @@
         if(restAmt>0) segs.push({k:"lainnya", amt:restAmt, color:"#a0aec0"});
         var tot = segs.reduce(function(s,x){ return s+x.amt; },0) || 1;
         $("donutTotal").textContent = rp(tot);
-        var C = 2*Math.PI*74, off = 0, svg = '<circle cx="84" cy="84" r="74" fill="none" stroke="var(--surface2)" stroke-width="17"/>';
+        var C = 2*Math.PI*74, off = 0;
+        var defs = '<defs>' + segs.map(function(sg, idx){ return '<linearGradient id="dg'+idx+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+shade(sg.color,.38)+'"/><stop offset="1" stop-color="'+sg.color+'"/></linearGradient>'; }).join("") + '</defs>';
+        var svg = defs + '<circle cx="84" cy="84" r="74" fill="none" stroke="var(--surface2)" stroke-width="17"/>';
         segs.forEach(function(sg, idx){
           var frac = sg.amt/tot;
-          svg += '<circle class="seg" cx="84" cy="84" r="74" fill="none" stroke="'+sg.color+'" stroke-width="17" stroke-linecap="butt" stroke-dasharray="0 '+C+'" data-dash="'+(frac*C-3)+' '+C+'" stroke-dashoffset="'+(-off)+'" style="transition:stroke-dasharray 1s cubic-bezier(.2,.8,.25,1) '+(idx*0.09)+'s"/>';
+          svg += '<circle class="seg" cx="84" cy="84" r="74" fill="none" stroke="url(#dg'+idx+')" stroke-width="17" stroke-linecap="butt" stroke-dasharray="0 '+C+'" data-dash="'+(frac*C-3)+' '+C+'" data-circ="'+C+'" stroke-dashoffset="'+(-off)+'" style="transition:stroke-dasharray 1s cubic-bezier(.2,.8,.25,1) '+(idx*0.09)+'s"/>';
           off += frac*C;
         });
         $("donutSvg").innerHTML = svg;
@@ -521,11 +561,8 @@
         var recent = txs.slice().sort(function(a,b){ return b.ts-a.ts; }).slice(0,6);
         $("recentList").innerHTML = recent.map(txRow).join("");
 
-        requestAnimationFrame(function(){ setTimeout(function(){
-          document.querySelectorAll(".bar").forEach(function(b2){ b2.style.height = b2.getAttribute("data-h")+"px"; });
-          document.querySelectorAll("#donutSvg .seg").forEach(function(s2){ var d=s2.getAttribute("data-dash"); s2.setAttribute("stroke-dasharray", d); });
-          renderBudgets();
-        }, 60); });
+        lastMonths = months; lastLabels = labels;
+        requestAnimationFrame(function(){ setTimeout(function(){ playCharts(); renderBudgets(); }, 60); });
       }
 
       function renderTop(){
@@ -552,10 +589,12 @@
           var spent = budgetSpent(b), pct = Math.min(100, Math.round(spent/b.target*100)), over = spent>b.target;
           return '<div class="bud'+(over?" over":"")+'"><div class="row"><i style="background:'+b.color+'"></i>'+b.label+
             '<button class="edit" data-bud="'+i+'">Atur target</button></div>' +
-            '<div class="track"><div class="fill" data-w="'+pct+'" style="background:'+(over?"var(--red)":b.color)+'"></div></div>' +
+            '<div class="track"><div class="fill" data-w="'+pct+'" style="background:'+(over?"linear-gradient(90deg,#f0766c,var(--red))":"linear-gradient(90deg,"+shade(b.color,.3)+","+b.color+")")+'"></div></div>' +
             '<div class="nums"><span>'+rp(spent)+' dari '+rp(b.target)+'</span><span class="st">'+(over? "Lewat "+rp(spent-b.target) : pct+"% terpakai")+'</span></div></div>';
         }).join("");
-        document.querySelectorAll("#budgetList .fill").forEach(function(f){ f.style.width = f.getAttribute("data-w")+"%"; });
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){
+          document.querySelectorAll("#budgetList .fill").forEach(function(f){ f.style.width = f.getAttribute("data-w")+"%"; });
+        }); });
         document.querySelectorAll("[data-bud]").forEach(function(btn){
           btn.addEventListener("click", function(){ openBudget(parseInt(btn.getAttribute("data-bud"),10)); });
         });
@@ -607,6 +646,7 @@
         $("view-"+v).classList.add("on");
         document.querySelectorAll("nav.bottom button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-view")===v); });
         window.scrollTo({top:0, behavior:"smooth"});
+        if(v==="home"){ setTimeout(playCharts, 180); }
         if(v==="laporan"){ renderTop(); renderBudgets(); }
         if(v==="pinjam"){ renderLoans(); }
         if(v==="riwayat"){ renderHistory(); }
@@ -616,15 +656,43 @@
       });
       $("goRiwayat").addEventListener("click", function(){ switchView("riwayat"); });
 
-      /* ripple */
-      document.querySelectorAll(".qa button").forEach(function(b){
-        b.addEventListener("click", function(e){
-          var r = document.createElement("span"); r.className = "ripple";
-          var rect = b.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
-          r.style.width = r.style.height = size+"px";
-          r.style.left = (e.clientX-rect.left-size/2)+"px"; r.style.top = (e.clientY-rect.top-size/2)+"px";
-          b.appendChild(r); setTimeout(function(){ r.remove(); }, 600);
+      /* ripple di semua tombol & kartu yang bisa ditekan */
+      document.addEventListener("click", function(e){
+        var b = e.target.closest ? e.target.closest(".qa button, .chip, .akun, .more-btn, .opts button, .quick button, .loan .pay, nav.bottom button, .bud .edit") : null;
+        if(!b) return;
+        var r = document.createElement("span"); r.className = "ripple";
+        var rect = b.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
+        var cx = e.clientX || (rect.left + rect.width/2), cy = e.clientY || (rect.top + rect.height/2);
+        r.style.width = r.style.height = size+"px";
+        r.style.left = (cx-rect.left-size/2)+"px"; r.style.top = (cy-rect.top-size/2)+"px";
+        b.appendChild(r); setTimeout(function(){ r.remove(); }, 600);
+      });
+
+      /* diagram beranimasi ulang tiap masuk layar saat halaman digeser */
+      if("IntersectionObserver" in window){
+        var chartIO = new IntersectionObserver(function(entries){
+          entries.forEach(function(en){ if(en.isIntersecting) playCharts(); });
+        }, {threshold:.35});
+        document.querySelectorAll("#barChart, #donutSvg").forEach(function(el){
+          var card = el.closest ? el.closest(".card") : null; if(card) chartIO.observe(card);
         });
+        /* section muncul halus satu per satu saat digeser ke layar */
+        var rvIO = new IntersectionObserver(function(entries){
+          entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); rvIO.unobserve(en.target); } });
+        }, {threshold:.08, rootMargin:"0px 0px 90px 0px"});
+        document.querySelectorAll("section").forEach(function(el, i){
+          el.classList.add("rv"); el.style.transitionDelay = (i%3)*0.06 + "s"; rvIO.observe(el);
+        });
+      }
+
+      /* ketuk batang diagram → rincian bulan itu */
+      $("barChart").addEventListener("click", function(e){
+        var col = e.target.closest ? e.target.closest(".bar-col") : null;
+        if(!col || !lastMonths.length) return;
+        var idx = Array.prototype.indexOf.call(col.parentNode.children, col);
+        var m = lastMonths[idx]; if(!m) return;
+        toast(lastLabels[idx] + " 2026 — masuk " + rpShort(m.inn) + " · keluar " + rpShort(m.out));
+        haptic();
       });
 
       /* ================= SHEET / FORMS ================= */
