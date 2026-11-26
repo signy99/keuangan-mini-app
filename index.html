@@ -223,6 +223,16 @@
       .empty{padding:26px 10px; text-align:center; color:var(--muted); font-size:13px; font-weight:600;}
       .foot{margin-top:30px; font-size:11.5px; color:var(--muted); line-height:1.65; font-weight:500;}
       .more-btn{width:100%; margin-top:12px; border:1px solid var(--line); background:var(--surface); border-radius:14px; padding:13px; font:inherit; font-weight:800; font-size:13px; cursor:pointer; color:var(--green-deep);}
+      .browser-banner{display:none; margin-top:16px; background:var(--amber-soft); border:1.5px solid #f0c36d; color:#7a4a00; border-radius:16px; padding:13px 14px; font-size:13px; font-weight:700; line-height:1.55; gap:10px; align-items:flex-start; box-shadow:var(--shadow-sm);}
+      .browser-banner.on{display:flex;}
+      .browser-banner svg{width:20px;height:20px;flex:none;margin-top:1px;color:var(--amber);}
+      .fallback-panel{display:none; margin-top:16px; background:var(--amber-soft); border:1.5px solid #f0c36d; border-radius:16px; padding:14px;}
+      .fallback-panel.on{display:block;}
+      .fallback-panel .fb-label{font-size:11px; font-weight:800; color:#7a4a00; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
+      .fallback-cmd{background:#fff; border:1px solid #ecd9a8; border-radius:12px; padding:12px 13px; font-size:14px; font-weight:700; color:var(--ink); word-break:break-word; line-height:1.5; font-variant-numeric:tabular-nums;}
+      .fallback-copy{width:100%; margin-top:10px; border:0; border-radius:12px; padding:12px; font:inherit; font-weight:800; font-size:13.5px; background:var(--amber); color:#fff; cursor:pointer; box-shadow:0 8px 18px rgba(232,147,12,.28);}
+      .fallback-copy:active{transform:scale(.98);}
+      .fallback-note{font-size:12.5px; color:#7a4a00; font-weight:600; line-height:1.55; margin:10px 0 0;}
       /* ---------- reveal saat scroll & animasi ekstra ---------- */
       .rv{opacity:.25; transform:translateY(24px); transition:opacity .65s ease, transform .65s cubic-bezier(.2,.9,.3,1);}
       .rv.in{opacity:1; transform:none;}
@@ -243,6 +253,7 @@
   </head>
   <body>
     <div class="wrap">
+      <div class="browser-banner" id="browserBanner" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span>Dibuka dari browser — Simpan tidak akan terkirim. Buka lewat tombol Keuangan di bot Telegram @duitbersama_bot.</span></div>
       <header class="top">
         <div class="greet">
           <div class="avatar" aria-hidden="true">
@@ -398,6 +409,12 @@
       <div class="fld" id="fldLoan" style="display:none"><label>Pinjaman</label><div class="opts" id="optLoan"></div></div>
       <div class="fld"><label>Keterangan</label><input class="note-in" id="noteIn" type="text" placeholder="cth: belanja sayur, bensin, gaji…" /></div>
       <button class="submit" id="submitBtn">Simpan</button>
+      <div class="fallback-panel" id="fallbackPanel" aria-live="polite">
+        <div class="fb-label">Perintah untuk disalin</div>
+        <div class="fallback-cmd" id="fallbackCmd"></div>
+        <button class="fallback-copy" id="copyCmdBtn" type="button">Salin perintah</button>
+        <p class="fallback-note">Tempel perintah ini di grup WA atau chat Telegram bot, maka tercatat.</p>
+      </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -714,6 +731,7 @@
         });
       }
       function openSheet(mode, loanId){
+        hideFallbackPanel();
         sheetMode = mode; budgetIdx = null;
         var M = MODES[mode];
         $("sheetTitle").textContent = M.title; $("sheetHint").textContent = M.hint;
@@ -742,6 +760,7 @@
         setTimeout(function(){ $("amtIn").focus(); }, 380);
       }
       function openBudget(i){
+        hideFallbackPanel();
         sheetMode = "budget"; budgetIdx = i;
         $("sheetTitle").textContent = "Atur Target — " + BUDGETS[i].label;
         $("sheetHint").textContent = "Target pengeluaran per bulan untuk kategori ini.";
@@ -795,6 +814,24 @@
       }
       function haptic(){ try{ if(window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) Telegram.WebApp.HapticFeedback.impactOccurred("light"); }catch(e){} }
       function tgSend(obj){ try{ if(window.Telegram && Telegram.WebApp) Telegram.WebApp.sendData(JSON.stringify(obj)); }catch(e){} }
+      function isTelegramWebApp(){ try{ return !!(window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.initData==="string" && Telegram.WebApp.initData.length>0); }catch(e){ return false; } }
+      var currentFallbackCmd = "";
+      function buildFallbackCommand(mode, amt, note, loanObj){
+        var ket = (note||"").trim();
+        if(mode==="keluar") return ("keluar " + amt + (ket ? " " + ket : "") + " @" + sel.from).replace(/\s+/g," ").trim();
+        if(mode==="masuk") return ("masuk " + amt + (ket ? " " + ket : "") + " @" + sel.from).replace(/\s+/g," ").trim();
+        if(mode==="pindah") return ("pindah " + amt + " @" + sel.from + " @" + sel.to).replace(/\s+/g," ").trim();
+        if(mode==="pinjam") return ("pinjam " + amt + (ket ? " " + ket : "") + " @" + sel.from).replace(/\s+/g," ").trim();
+        if(mode==="kembali"){ var dari = loanObj ? loanObj.dari : sel.from; return ("kembali " + amt + " " + dari).replace(/\s+/g," ").trim(); }
+        return "";
+      }
+      function showFallbackPanel(cmd){
+        currentFallbackCmd = cmd;
+        $("fallbackCmd").textContent = cmd;
+        $("fallbackPanel").classList.add("on");
+        try{ $("fallbackPanel").scrollIntoView({behavior:"smooth", block:"nearest"}); }catch(e){}
+      }
+      function hideFallbackPanel(){ currentFallbackCmd = ""; var p = $("fallbackPanel"); if(p) p.classList.remove("on"); var c = $("fallbackCmd"); if(c) c.textContent = ""; }
 
       $("submitBtn").addEventListener("click", function(){
         var amt = amtVal(), note = $("noteIn").value.trim(), now = Date.now();
@@ -804,6 +841,16 @@
           toast("Target " + BUDGETS[budgetIdx].label + " jadi " + rp(amt) + "/bulan"); confetti(); return;
         }
         if(amt<=0){ toast("Isi nominalnya dulu ya"); return; }
+        if(sheetMode==="pindah" && sel.from===sel.to){ toast("Akun asal dan tujuan tidak boleh sama"); return; }
+        var kembaliLoanForCmd = null;
+        if(sheetMode==="kembali"){
+          kembaliLoanForCmd = loans.filter(function(l){ return l.id===sel.loan; })[0];
+          if(!kembaliLoanForCmd){ toast("Tidak ada pinjaman aktif"); return; }
+        }
+        if(!isTelegramWebApp()){
+          var fallbackCmd = buildFallbackCommand(sheetMode, amt, note, kembaliLoanForCmd);
+          if(fallbackCmd){ showFallbackPanel(fallbackCmd); return; }
+        }
         if(sheetMode==="masuk"){
           txs.push({ts:now, jenis:"masuk", akun:sel.from, kat:sel.kat, ket:note, jumlah:amt, oleh:"Suami"});
           tgSend({aksi:"masuk", akun:sel.from, kat:sel.kat, jumlah:amt, ket:note});
@@ -834,8 +881,25 @@
         renderHome(false); renderHistory(); renderLoans(); renderTop();
       });
 
+      $("copyCmdBtn").addEventListener("click", function(){
+        var text = currentFallbackCmd || $("fallbackCmd").textContent || "";
+        if(!text) return;
+        function done(){ toast("Perintah disalin"); }
+        function fallbackCopy(){
+          try{
+            var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done();
+          }catch(e){ toast("Gagal menyalin — salin teksnya manual ya"); }
+        }
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(done, fallbackCopy);
+        } else { fallbackCopy(); }
+      });
+
       /* ================= INIT ================= */
       try{ if(window.Telegram && Telegram.WebApp){ Telegram.WebApp.ready(); Telegram.WebApp.expand(); } }catch(e){}
+      if(!isTelegramWebApp()){ var bb = $("browserBanner"); if(bb) bb.classList.add("on"); }
+      setTimeout(function(){ var bb2 = $("browserBanner"); if(!bb2) return; if(isTelegramWebApp()) bb2.classList.remove("on"); else bb2.classList.add("on"); }, 600);
       var nowD = new Date();
       $("todayLbl").textContent = nowD.toLocaleDateString("id-ID",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
       renderHome(true); renderHistory(); renderLoans(); renderTop(); renderBudgets();
